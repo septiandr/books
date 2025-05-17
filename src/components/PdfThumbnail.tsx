@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, ActivityIndicator, View } from 'react-native';
 import Pdf from 'react-native-pdf';
 import ViewShot from 'react-native-view-shot';
@@ -6,18 +7,31 @@ import ViewShot from 'react-native-view-shot';
 type Props = {
   path: string;
   onReady: (uri: string) => void;
-  ref:any
 };
 
-function PDFThumbnailComponent({ path, onReady, ref }: Props) {
+const PDFThumbnailComponent = forwardRef<ViewShot, Props>(({ path, onReady }, ref) => {
   const [loading, setLoading] = useState(true);
+  const viewShotRef = useRef<any>(null);
+
+  // Optional: Expose internal ref if needed
+  useImperativeHandle(ref, () => viewShotRef.current!);
+
+  useEffect(() => {
+    if (!loading && viewShotRef.current) {
+      // Call capture manually once loading is done
+      viewShotRef.current.capture().then((uri : any) => {
+        onReady(uri);
+      }).catch((err: any) => {
+        console.warn('Capture failed:', err);
+      });
+    }
+  }, [loading]);
 
   return (
     <ViewShot
-      ref={ref}
+      ref={viewShotRef}
       options={{ format: 'jpg', quality: 0.5, result: 'tmpfile' }}
       style={styles.captureBox}
-      onCapture={uri => onReady(uri)}
     >
       {loading && (
         <View style={styles.loadingOverlay}>
@@ -40,7 +54,7 @@ function PDFThumbnailComponent({ path, onReady, ref }: Props) {
       />
     </ViewShot>
   );
-}
+});
 
 const PDFThumbnail = React.memo(PDFThumbnailComponent);
 export default PDFThumbnail;

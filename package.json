@@ -3,13 +3,14 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
+    "android": "npx react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
-    "start": "react-native start",
+    "start": "react-native run-android",
     "test": "jest",
     "clean-android": "cd android && ./gradlew clean && cd .. && react-native run-android",
-    "remove-node": "rm -rf node_modules/ && rm -rf yarn.lock && yarn install"
+    "remove-node": "rm -rf node_modules/ && rm -rf yarn.lock && yarn install",
+    "build-apk": "cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.2",
@@ -19,6 +20,7 @@
     "react": "19.0.0",
     "react-native": "0.79.2",
     "react-native-blob-util": "^0.21.2",
+    "react-native-fast-image": "^8.6.3",
     "react-native-ionicons": "^4.6.5",
     "react-native-pdf": "^6.6.2",
     "react-native-permissions": "^5.4.0",
