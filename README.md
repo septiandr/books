@@ -1,3 +1,22 @@
+Project Gav Book React Native
+
+library used :
+1. react native pdf
+2. react native async storage
+3. react native blob util
+4. react native view shot
+
+issue:
+1. expo can't handle root file system
+2. use react native blob util to handle file system but not support for expo
+3. must eject from expo to react native cli
+4. my expectation at viewer page, if press down will scroll to down, buat react native pdf not supported, on this project only supprort to next page
+5. i try to use web view to get pdf viewer, but i cant read root file system
+
+
+note:react native view shot to get screenshot from pdf and save it to file system, but react native view shot need more time to run screenshot
+
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
