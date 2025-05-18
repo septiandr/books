@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>PDF Viewer</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+    #viewerContainer { height: 100vh; overflow: auto; }
+    canvas { display: block; margin: auto; }
+  </style>
+</head>
+<body>
+  <div id="viewerContainer"><canvas id="pdf-render"></canvas></div>
+
+  <script src="pdf.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const file = urlParams.get('file');
+
+    const loadingTask = pdfjsLib.getDocument(file);
+    loadingTask.promise.then(pdf => {
+      pdf.getPage(1).then(page => {
+        const scale = 1.5;
+        const viewport = page.getViewport({ scale });
+        const canvas = document.getElementById('pdf-render');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = { canvasContext: context, viewport };
+        page.render(renderContext);
+      });
+    });
+  </script>
+</body>
+</html>

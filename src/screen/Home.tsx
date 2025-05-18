@@ -14,6 +14,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MemoizedPdfItem } from '../components/PdfItemComponent';
 import { getLastViews } from '../utils/savelastView';
+import { RootStackParamList } from '../routes/routes';
 
 export type PdfItem = {
   name: string;
@@ -21,10 +22,6 @@ export type PdfItem = {
   thumbnail?: string;
 };
 
-type RootStackParamList = {
-  Home: undefined;
-  Viewer: { path: string; name: string };
-};
 
 export type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -34,39 +31,13 @@ export type HomeScreenNavigationProp = NativeStackNavigationProp<
 export default function HomeScreen() {
   const [pdfList, setPdfList] = useState<PdfItem[]>([]);
   const [lastViewed, setLastViewed] = useState<PdfItem[]>([]);
-  const [thumbnails, setThumbnails] = useState<{ [name: string]: string }>({});
+  const [thumbnails, setThumbnails] = useState<{ [path: string]: string }>({});
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation<HomeScreenNavigationProp>();
-
-  // const loadData = async () => {
-  //   await requestStoragePermission();
-  //   const files = await loadFiles();
-
-  //   const formatted = files.map(name => ({
-  //     name: name.replace(/[-_+]/g, ' '),
-  //     path: `/storage/emulated/0/books/${name}`,
-  //   }));
-
-  //   setPdfList(formatted);
-
-  //   const lastViews = await getLastViews();
-
-  //   const matchedLastViewed = lastViews
-  //     .map((view: any) => formatted.find(item => item.path === view.path))
-  //     .filter(Boolean) as PdfItem[];
-
-  //   setLastViewed(matchedLastViewed);
-  // };
 
   useEffect(() => {
     loadData();
   }, []);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  };
 
   const loadData = useCallback(async () => {
     await requestStoragePermission();
@@ -80,7 +51,6 @@ export default function HomeScreen() {
     setPdfList(formatted);
 
     const lastViews = await getLastViews();
-
     const matchedLastViewed = lastViews
       .map((view: any) => formatted.find(item => item.path === view.path))
       .filter(Boolean) as PdfItem[];
@@ -88,22 +58,27 @@ export default function HomeScreen() {
     setLastViewed(matchedLastViewed);
   }, []);
 
-  // Gunakan useFocusEffect agar loadData dipanggil saat screen fokus
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
   useFocusEffect(
     useCallback(() => {
       loadData();
     }, [loadData]),
   );
 
-  const updateThumbnail = useCallback((name: string, uri: string) => {
-    setThumbnails(prev => ({ ...prev, [name]: uri }));
+  const updateThumbnail = useCallback((path: string, uri: string) => {
+    setThumbnails(prev => ({ ...prev, [path]: uri }));
   }, []);
 
   const renderItem = useCallback(
     ({ item }: { item: PdfItem }) => (
       <MemoizedPdfItem
         item={item}
-        thumbnailUri={thumbnails[item.name]}
+        thumbnailUri={thumbnails[item.path]}
         onThumbnailReady={updateThumbnail}
         navigation={navigation}
       />
@@ -119,38 +94,38 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <FlatList
         ListHeaderComponent={
-          <View>
+          <View style={styles.headerSection}>
             {lastViewed.length > 0 && (
-              <>
-                <Text style={styles.title}>Last Viewed</Text>
+              <View style={styles.section}>
+                <Text style={styles.title}>📌 Last Viewed</Text>
                 <FlatList
                   data={lastViewed}
-                  keyExtractor={item => `last-${item.name}`}
+                  keyExtractor={item => `last-${item.path}`}
                   numColumns={2}
                   scrollEnabled={false}
                   renderItem={renderItem}
                   contentContainerStyle={styles.grid}
                 />
-              </>
+              </View>
             )}
-            <Text style={styles.title}>All PDFs</Text>
+            <Text style={styles.title}>📚 All PDFs ({otherPdfs.length})</Text>
           </View>
         }
         data={otherPdfs}
-        keyExtractor={item => item.name}
+        keyExtractor={item => item.path}
         numColumns={2}
         renderItem={renderItem}
-        contentContainerStyle={[styles.grid, { paddingBottom: 60 }]}
+        contentContainerStyle={[styles.grid, { paddingBottom: 80 }]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <Text style={{ marginTop: 20 }}>Belum ada file PDF</Text>
+          <Text style={styles.emptyText}>Belum ada file PDF</Text>
         }
-        initialNumToRender={4}
-        maxToRenderPerBatch={4}
-        windowSize={5}
-        removeClippedSubviews={true}
+        removeClippedSubviews={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={10}
         updateCellsBatchingPeriod={50}
         getItemLayout={(_, index) => ({
           length: 200,
@@ -163,10 +138,23 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  title: { fontSize: 20, fontWeight: 'bold', marginVertical: 10, marginLeft: 20 },
+  container: { flex: 1, backgroundColor: '#f9f9f9' },
+  headerSection: { paddingHorizontal: 20, paddingTop: 10 },
+  section: { marginBottom: 20 },
+  title: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+  },
   grid: {
     paddingHorizontal: 20,
-    gap: 12,
+    gap: 16,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 30,
+    fontSize: 16,
+    color: '#888',
   },
 });

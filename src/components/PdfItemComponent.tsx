@@ -39,7 +39,7 @@ const PdfItemComponent = ({
   };
 
   const getThumbnailFolder = async () => {
-    const dir = RNBlobUtil.fs.dirs.DocumentDir + '/thumbnail';
+    const dir = RNBlobUtil.fs.dirs.LegacySDCardDir + '/books/thumbnail';
     const exists = await RNBlobUtil.fs.exists(dir);
     if (!exists) {
       await RNBlobUtil.fs.mkdir(dir);
@@ -81,35 +81,29 @@ const PdfItemComponent = ({
 
   const handleThumbnailReady = async (uri: string) => {
     try {
-      await cleanOldThumbnails(); // Optional bersihkan thumbnail lama
-
+      await cleanOldThumbnails();
+  
       const cleanUri = uri.replace('file://', '');
       const safeName = cleanFileName(item.name);
-
-      // Dapatkan path file thumbnail yang ada/baru
       const destPath = await getThumbnailFilePath(safeName);
-
+  
       const exists = await waitForFile(cleanUri);
       if (!exists) throw new Error('Captured file not found after waiting');
-
-      // Cek apakah file thumbnail sudah ada
+  
       const destExists = await RNBlobUtil.fs.exists(destPath);
       if (!destExists) {
-        // Kalau belum ada, tulis file baru
-        const imageData = await RNBlobUtil.fs.readFile(cleanUri, 'base64');
-        await RNBlobUtil.fs.writeFile(destPath, imageData, 'base64');
-        console.log('✅ New thumbnail saved:', destPath);
+        await RNBlobUtil.fs.cp(cleanUri, destPath);
       } else {
-        console.log('ℹ️ Thumbnail already exists, using:', destPath);
+        console.log('ℹ️ Thumbnail already exists:', destPath);
       }
-
-      onThumbnailReady(item.name, destPath);
+  
+      onThumbnailReady(item.name, `file://${destPath}`);
     } catch (error: any) {
       console.error('❌ Error saving thumbnail:', error.message);
     }
   };
-
-  console.log(thumbnailUri)
+  
+console.log(item.path)
   return (
     <TouchableOpacity
       style={styles.item}
@@ -118,7 +112,7 @@ const PdfItemComponent = ({
       }}>
       {thumbnailUri ? (
         <Image
-          source={{uri: `file://${thumbnailUri}`}}
+        source={{uri: thumbnailUri}}
           style={styles.thumbnail}
           resizeMode="cover"
         />

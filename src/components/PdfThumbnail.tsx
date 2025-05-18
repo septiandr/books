@@ -18,19 +18,21 @@ const PDFThumbnailComponent = forwardRef<ViewShot, Props>(({ path, onReady }, re
 
   useEffect(() => {
     if (!loading && viewShotRef.current) {
-      // Call capture manually once loading is done
-      viewShotRef.current.capture().then((uri : any) => {
-        onReady(uri);
-      }).catch((err: any) => {
-        console.warn('Capture failed:', err);
+      // Tunggu frame berikutnya supaya render selesai
+      requestAnimationFrame(() => {
+        viewShotRef.current.capture().then((uri: any) => {
+          onReady(uri);
+        }).catch((err: any) => {
+          console.warn('Capture failed:', err);
+        });
       });
     }
   }, [loading]);
-
+  
   return (
     <ViewShot
       ref={viewShotRef}
-      options={{ format: 'jpg', quality: 0.5, result: 'tmpfile' }}
+      options={{ format: 'jpg', quality: 1, result: 'tmpfile' }}
       style={styles.captureBox}
     >
       {loading && (
@@ -49,7 +51,8 @@ const PDFThumbnailComponent = forwardRef<ViewShot, Props>(({ path, onReady }, re
           setLoading(false);
         }}
         onLoadComplete={() => {
-          setLoading(false);
+          console.log('on COmplete thumbnail')
+          setTimeout(() => setLoading(false), 1000);
         }}
       />
     </ViewShot>

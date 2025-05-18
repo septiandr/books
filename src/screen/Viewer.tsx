@@ -30,7 +30,6 @@ export default function Viewer() {
       }
     })();
   }, [path]);
-  
 
   const goToPage = (direction: 'up' | 'down') => {
     setPaging(true);
